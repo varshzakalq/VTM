@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hobby Music Streamer</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --accent: #1db954;
+      --text: #ffffff;
+      --text-muted: #b3b3b3;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      padding-bottom: 120px; /* Space for fixed bottom player */
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 25px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 24px;
+      border: 1px solid #333;
+      background: #282828;
+      color: #fff;
+      font-size: 16px;
+      outline: none;
+    }
+
+    button.search-btn {
+      padding: 12px 24px;
+      border-radius: 24px;
+      border: none;
+      background: var(--accent);
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .song-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .song-card {
+      display: flex;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 10px 15px;
+      border-radius: 8px;
+      gap: 15px;
+    }
+
+    .song-card img {
+      width: 50px;
+      height: 50px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    .song-info {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .song-title {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .song-artist {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .play-btn {
+      background: var(--accent);
+      border: none;
+      color: #000;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Fixed Bottom Player Bar */
+    .player-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #181818;
+      border-top: 1px solid #282828;
+      padding: 12px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .now-playing {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .now-playing img {
+      width: 45px;
+      height: 45px;
+      border-radius: 4px;
+      background: #333;
+    }
+
+    audio {
+      width: 100%;
+      height: 40px;
+      outline: none;
+    }
+
+    .loading {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Hobby Music Streamer</h2>
+
+    <!-- Search Section -->
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search song title or artist..." onkeypress="handleKeyPress(event)" />
+      <button class="search-btn" onclick="searchSongs()">Search</button>
+    </div>
+
+    <!-- Search Results Container -->
+    <div id="results" class="song-list"></div>
+  </div>
+
+  <!-- Bottom Audio Player -->
+  <div class="player-bar">
+    <div class="now-playing">
+      <img id="currentThumb" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>" alt="Cover" />
+      <div class="song-info">
+        <div id="currentTitle" class="song-title">Select a song to play</div>
+        <div id="currentArtist" class="song-artist">--</div>
+      </div>
+    </div>
+    <audio id="audioPlayer" controls autoplay></audio>
+  </div>
+
+  <script>
+    const audioPlayer = document.getElementById('audioPlayer');
+
+    function handleKeyPress(e) {
+      if (e.key === 'Enter') searchSongs();
+    }
+
+    async function searchSongs() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) return;
+
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<div class="loading">Searching YouTube Music...</div>';
+
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const songs = await res.json();
+
+        if (songs.length === 0) {
+          resultsDiv.innerHTML = '<div>No songs found.</div>';
+          return;
+        }
+
+        resultsDiv.innerHTML = songs.map(song => `
+          <div class="song-card">
+            <img src="${song.thumbnail}" alt="Art" onerror="this.src='https://via.placeholder.com/50'">
+            <div class="song-info">
+              <div class="song-title">${escapeHtml(song.title)}</div>
+              <div class="song-artist">${escapeHtml(song.artist)}</div>
+            </div>
+            <button class="play-btn" onclick="playSong('${song.id}', '${escapeJs(song.title)}', '${escapeJs(song.artist)}', '${song.thumbnail}')">
+              Play
+            </button>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        resultsDiv.innerHTML = `<div class="loading" style="color: red;">Search failed: ${err.message}</div>`;
+      }
+    }
+
+    async function playSong(videoId, title, artist, thumbnail) {
+      const currentTitle = document.getElementById('currentTitle');
+      const currentArtist = document.getElementById('currentArtist');
+      const currentThumb = document.getElementById('currentThumb');
+
+      // Update Player UI state to loading
+      currentTitle.innerText = "Extracting stream...";
+      currentArtist.innerText = artist;
+      currentThumb.src = thumbnail;
+
+      try {
+        // Fetch direct .m4a stream URL from Flask backend
+        const res = await fetch(`/api/stream/${videoId}`);
+        const data = await res.json();
+
+        if (data.error || !data.stream_url) {
+          alert('Could not resolve stream URL for this track.');
+          currentTitle.innerText = "Error playing track";
+          return;
+        }
+
+        // Pass URL to HTML5 audio element
+        audioPlayer.src = data.stream_url;
+        currentTitle.innerText = title;
+
+        // Play audio
+        await audioPlayer.play();
+
+        // Enable Lock Screen / OS Notifications via MediaSession API
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: title,
+            artist: artist,
+            artwork: [{ src: thumbnail, sizes: '512x512', type: 'image/jpeg' }]
+          });
+        }
+
+      } catch (err) {
+        console.error('Playback Error:', err);
+        currentTitle.innerText = "Error playing track";
+      }
+    }
+
+    // Helper functions for safe string rendering
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function escapeJs(str) {
+      return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+  </script>
+</body>
+</html>
