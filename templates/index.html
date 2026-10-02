@@ -8,63 +8,109 @@
 </head>
 <body>
 
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand"><span class="logo">▶</span><h1>VTM</h1></div>
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search song title or artist..." autocomplete="off" />
-        <button class="search-btn" id="searchBtn">Search</button>
-      </div>
-    </div>
-  </header>
+<!-- Icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="7,4 20,12 7,20" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1.2" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1.2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><polygon points="19,5 9,12 19,19" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="4.5" y="5" width="2.5" height="14" rx="1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><polygon points="5,5 15,12 5,19" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="17" y="5" width="2.5" height="14" rx="1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></symbol>
+  <symbol id="i-heart-fill" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></symbol>
+</svg>
 
-  <main class="container">
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="logo"><svg class="ico"><use href="#i-play"/></svg></span><h1>VTM</h1></div>
+    <div class="search-box">
+      <svg class="ico"><use href="#i-search"/></svg>
+      <input type="text" id="searchInput" placeholder="Search song or artist" autocomplete="off" />
+      <button class="search-btn" id="searchBtn">Search</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section>
+    <div class="section-head"><h2>Search Results</h2></div>
+    <div id="search-results" class="song-list"></div>
+  </section>
+
+  <div class="grid">
     <section>
-      <div class="section-head"><h2>Search Results</h2></div>
-      <div id="search-results" class="song-list"></div>
+      <div class="section-head">
+        <button id="queue-collapse-btn" class="collapse-btn" aria-expanded="true">
+          <span class="chev"><svg class="ico"><use href="#i-chevron-down"/></svg></span>
+          <span>Up Next</span>
+          <span id="queue-count" class="count">0</span>
+        </button>
+        <button id="auto-queue-btn" class="toggle active" aria-pressed="true" title="Add similar songs automatically">
+          <span class="switch"></span>
+          <span class="toggle-label">Auto Queue: ON</span>
+        </button>
+      </div>
+      <div id="queue-list" class="song-list"></div>
     </section>
 
-    <div class="grid">
-      <section>
-        <div class="section-head">
-          <button id="queue-collapse-btn" class="collapse-btn" aria-expanded="true" title="Collapse / expand">
-            <span class="chev">▾</span>
-            <span class="collapse-title">Up Next</span>
-            <span id="queue-count" class="count">0</span>
-          </button>
-          <button id="auto-queue-btn" class="toggle active" aria-pressed="true" title="Automatically add similar songs when the queue runs low">
-            <span class="switch"></span>
-            <span class="toggle-label">Auto Queue: ON</span>
-          </button>
-        </div>
-        <div id="queue-list" class="song-list"></div>
-      </section>
+    <section>
+      <div class="section-head"><h2>Liked Songs</h2></div>
+      <div id="liked-songs-list" class="song-list"></div>
+    </section>
+  </div>
+</main>
 
-      <section>
-        <div class="section-head"><h2>Liked Songs</h2></div>
-        <div id="liked-songs-list" class="song-list"></div>
-      </section>
+<!-- Bottom banner (tap to expand) -->
+<div class="player-bar" id="miniPlayer">
+  <input type="range" id="seekBar" class="seek" min="0" max="100" step="0.1" value="0" aria-label="Seek">
+  <div class="mini-row">
+    <img id="currentThumb" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" alt="">
+    <div class="song-info">
+      <div id="currentTitle" class="song-title">Select a song to play</div>
+      <div id="currentArtist" class="song-artist">--</div>
     </div>
-  </main>
+    <button class="ctrl" id="prevBtn" aria-label="Previous"><svg class="ico"><use href="#i-prev"/></svg></button>
+    <button class="ctrl play-pause" id="playPauseBtn" aria-label="Play or pause"><svg class="ico"><use href="#i-play"/></svg></button>
+    <button class="ctrl" id="nextBtn" aria-label="Next"><svg class="ico"><use href="#i-next"/></svg></button>
+  </div>
+  <audio id="audioPlayer" autoplay></audio>
+</div>
 
-  <!-- Bottom player -->
-  <div class="player-bar">
-    <div class="now-playing">
-      <img id="currentThumb" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" alt="Cover" />
-      <div class="song-info">
-        <div id="currentTitle" class="song-title">Select a song to play</div>
-        <div id="currentArtist" class="song-artist">--</div>
-      </div>
-    </div>
-    <input type="range" id="seekBar" class="seek" min="0" max="100" step="0.1" value="0" aria-label="Seek">
-    <audio id="audioPlayer" autoplay></audio>
-    <div class="controls">
-      <button class="ctrl" id="prevBtn" aria-label="Previous">⏮</button>
-      <button class="ctrl play-pause" id="playPauseBtn" aria-label="Play / Pause">▶</button>
-      <button class="ctrl" id="nextBtn" aria-label="Next">⏭</button>
+<!-- Full player -->
+<div class="full-player" id="full-player" aria-hidden="true">
+  <button class="fp-close" id="fpClose" aria-label="Close player"><svg class="ico"><use href="#i-chevron-down"/></svg></button>
+
+  <div class="u-cover" id="uCover">
+    <div class="u-meta">
+      <h3 id="fpTitle">Nothing playing</h3>
+      <p id="fpArtist">--</p>
     </div>
   </div>
 
-  <script src="static/script.js"></script>
+  <div class="arc-wrap">
+    <svg id="arc" viewBox="0 0 320 175">
+      <path d="M14 14A146 146 0 0 0 306 14" class="arc-track"/>
+      <path id="arcProgress" d="M14 14A146 146 0 0 0 306 14" class="arc-progress" pathLength="100" stroke-dasharray="0 100"/>
+      <circle id="arcKnob" cx="14" cy="14" r="8" class="arc-knob"/>
+    </svg>
+  </div>
+  <div class="fp-time" id="fpTime">0:00 / 0:00</div>
+
+  <div class="fp-controls">
+    <button class="icon-btn" id="shuffleBtn" aria-label="Shuffle"><svg class="ico"><use href="#i-shuffle"/></svg></button>
+    <div class="fp-pill">
+      <button class="ctrl" id="fpPrevBtn" aria-label="Previous"><svg class="ico"><use href="#i-prev"/></svg></button>
+      <button class="fp-play" id="fpPlayBtn" aria-label="Play or pause"><svg class="ico"><use href="#i-play"/></svg></button>
+      <button class="ctrl" id="fpNextBtn" aria-label="Next"><svg class="ico"><use href="#i-next"/></svg></button>
+    </div>
+    <button class="icon-btn" id="repeatBtn" aria-label="Repeat"><svg class="ico"><use href="#i-repeat"/></svg></button>
+  </div>
+</div>
+
+<script src="static/script.js"></script>
 </body>
 </html>
