@@ -116,29 +116,39 @@ function toggleAutoQueue() {
 
 // Fetch similar songs for a track and append them (skipping duplicates). Returns how many were added.
 async function loadRelatedTracks(videoId) {
-  if (!videoId || loadingRelated || relatedFetched.has(videoId)) return 0;
+  if (loadingRelated || relatedFetched.has(videoId)) return false;
   loadingRelated = true;
-  let added = 0;
+
   try {
     const res = await fetch(`/api/related/${encodeURIComponent(videoId)}`);
-    const data = await res.json();
-    const tracks = Array.isArray(data) ? data : (data.tracks || []);
+    
+    if (!res.ok) {
+      throw new Error(`Server returned status ${res.status}`);
+    }
 
-    tracks.forEach(t => {
-      const track = { ...t, id: t.id || t.videoId };
-      if (track.id && !queue.some(q => q.id === track.id)) {
-        queue.push(track);
-        added++;
-      }
-    });
+    const data = await res.json();
+    let added = false;
+
+    if (data.tracks && data.tracks.length > 0) {
+      data.tracks.forEach(track => {
+        const isDuplicate = queue.some(item => item.id === track.id);
+        if (track.id && !isDuplicate) {
+          remember(track);
+          queue.push(track);
+          added = true;
+        }
+      });
+      if (added) renderQueue();
+    }
+
     relatedFetched.add(videoId);
-    if (added) renderQueue();
+    return added;
   } catch (err) {
     console.error('Auto queue error:', err);
+    return false;
   } finally {
     loadingRelated = false;
   }
-  return added;
 }
 
 // If we're on one of the last 2 tracks, top up the queue

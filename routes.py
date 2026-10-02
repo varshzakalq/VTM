@@ -57,18 +57,25 @@ def register_routes(app,ytmusic):
     @app.route('/api/related/', methods=['GET'])
     def get_related_tracks(video_id):
         try:
-            # Fetch related "Up Next" tracks from YouTube Music
+            # Fetch related watch playlist from YouTube Music
             watch_playlist = ytmusic.get_watch_playlist(videoId=video_id, limit=10)
             
             tracks = []
             for track in watch_playlist.get('tracks', []):
+                if not track.get('videoId'):
+                    continue
+                    
+                artists = ", ".join([a['name'] for a in track.get('artists', []) if 'name' in a]) or 'Unknown Artist'
+                thumb = track['thumbnail'][-1]['url'] if track.get('thumbnail') else ''
+                
                 tracks.append({
                     'id': track.get('videoId'),
                     'title': track.get('title'),
-                    'artist': track['artists'][0]['name'] if track.get('artists') else 'Unknown Artist',
-                    'thumbnail': track['thumbnail'][-1]['url'] if track.get('thumbnail') else ''
+                    'artist': artists,
+                    'thumbnail': thumb
                 })
                 
             return jsonify({'tracks': tracks})
         except Exception as e:
+            print(f"[RELATED ERROR] {str(e)}", flush=True)
             return jsonify({'error': str(e)}), 500
