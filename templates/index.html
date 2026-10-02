@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>VTM</title>
-  <link rel="stylesheet" href="static/styles.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -56,13 +56,15 @@
         <div id="currentArtist" class="song-artist">--</div>
       </div>
     </div>
+    <input type="range" id="seekBar" class="seek" min="0" max="100" step="0.1" value="0" aria-label="Seek">
+    <audio id="audioPlayer" autoplay></audio>
     <div class="controls">
       <button class="ctrl" id="prevBtn" aria-label="Previous">⏮</button>
-      <audio id="audioPlayer" controls autoplay></audio>
+      <button class="ctrl play-pause" id="playPauseBtn" aria-label="Play / Pause">▶</button>
       <button class="ctrl" id="nextBtn" aria-label="Next">⏭</button>
     </div>
   </div>
 
-  <script src="static/script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

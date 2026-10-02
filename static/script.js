@@ -338,6 +338,47 @@ document.addEventListener('click', e => {
   }
 });
 
+// --- Seek line + play/pause ---
+const seekBar = document.getElementById('seekBar');
+const playPauseBtn = document.getElementById('playPauseBtn');
+let isSeeking = false;
+
+function setSeekFill() { seekBar.style.setProperty('--seek', seekBar.value + '%'); }
+function resetSeek() { seekBar.value = 0; setSeekFill(); }
+
+audioPlayer.addEventListener('timeupdate', () => {
+  if (isSeeking || !isFinite(audioPlayer.duration) || audioPlayer.duration === 0) return;
+  seekBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+  setSeekFill();
+});
+audioPlayer.addEventListener('loadstart', resetSeek);
+
+// Drag shows position; releasing jumps the song there
+seekBar.addEventListener('input', () => { isSeeking = true; setSeekFill(); });
+seekBar.addEventListener('change', () => {
+  if (isFinite(audioPlayer.duration)) {
+    audioPlayer.currentTime = (seekBar.value / 100) * audioPlayer.duration;
+  }
+  isSeeking = false;
+});
+
+function syncPlayPauseUI() { playPauseBtn.innerText = audioPlayer.paused ? '▶' : '⏸'; }
+audioPlayer.addEventListener('play', syncPlayPauseUI);
+audioPlayer.addEventListener('pause', syncPlayPauseUI);
+audioPlayer.addEventListener('ended', syncPlayPauseUI);
+
+playPauseBtn.addEventListener('click', () => {
+  if (!audioPlayer.getAttribute('src')) return; // nothing loaded yet
+  if (audioPlayer.paused) audioPlayer.play(); else audioPlayer.pause();
+});
+
+// --- Keep page content clear of the fixed player, whatever its height ---
+const playerBar = document.querySelector('.player-bar');
+function fitBodyToPlayer() { document.body.style.paddingBottom = (playerBar.offsetHeight + 24) + 'px'; }
+if ('ResizeObserver' in window) new ResizeObserver(fitBodyToPlayer).observe(playerBar);
+window.addEventListener('resize', fitBodyToPlayer);
+fitBodyToPlayer();
+
 // --- Init ---
 syncAutoQueueUI();
 syncQueueCollapseUI();
