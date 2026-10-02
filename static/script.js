@@ -11,7 +11,7 @@ try {
   const saved = localStorage.getItem('autoQueue');
   if (saved !== null) autoQueueEnabled = saved === 'true';
 } catch (e) {}
-let loadingRelated = false;
+let relatedInFlight = null;       // shared promise so "ended" can wait for a fetch already running
 const relatedFetched = new Set(); // track ids we already pulled related songs for
 
 const trackCache = {}; // id -> track, so buttons only need the id
@@ -25,7 +25,7 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function remember(track) { trackCache[track.id] = track; }
+function remember(track) { if (track && track.id) trackCache[track.id] = track; }
 function isLiked(id) { return likedSongs.some(s => s.id === id); }
 function thumbOf(track) { return escapeHtml(track.thumbnail || FALLBACK_IMG); }
 
@@ -59,11 +59,14 @@ function renderSearchResults() {
 
 function renderQueue() {
   const el = document.getElementById('queue-list');
+  document.getElementById('queue-count').innerText = queue.length;
   if (queue.length === 0) {
     el.innerHTML = '<div class="empty">Queue is empty.</div>';
     return;
   }
-  el.innerHTML = queue.map((track, index) => `
+  el.innerHTML = queue.map((track, index) => {
+    remember(track);
+    return `
     <div class="song-card ${index === currentTrackIndex ? 'playing' : ''}">
       <img src="${thumbOf(track)}" alt="Art" onerror="this.onerror=null;this.src='${FALLBACK_IMG}'">
       <div class="song-info">
@@ -74,7 +77,8 @@ function renderQueue() {
         <button data-action="queue-play" data-index="${index}">▶</button>
         <button data-action="queue-remove" data-index="${index}">✕</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderLikedSongs() {
@@ -97,6 +101,23 @@ function updateNowPlayingUI(track, titleOverride) {
   document.getElementById('currentThumb').src = track.thumbnail || FALLBACK_IMG;
 }
 
+// --- Collapsible Up Next ---
+let queueCollapsed = false;
+try { queueCollapsed = localStorage.getItem('queueCollapsed') === 'true'; } catch (e) {}
+
+function syncQueueCollapseUI() {
+  document.getElementById('queue-list').classList.toggle('collapsed', queueCollapsed);
+  const btn = document.getElementById('queue-collapse-btn');
+  btn.classList.toggle('collapsed', queueCollapsed);
+  btn.setAttribute('aria-expanded', String(!queueCollapsed));
+}
+
+function toggleQueueCollapse() {
+  queueCollapsed = !queueCollapsed;
+  try { localStorage.setItem('queueCollapsed', String(queueCollapsed)); } catch (e) {}
+  syncQueueCollapseUI();
+}
+
 // --- Auto Queue ---
 function syncAutoQueueUI() {
   const btn = document.getElementById('auto-queue-btn');
@@ -110,48 +131,44 @@ function toggleAutoQueue() {
   autoQueueEnabled = !autoQueueEnabled;
   try { localStorage.setItem('autoQueue', String(autoQueueEnabled)); } catch (e) {}
   syncAutoQueueUI();
-  // Turned on while near the end of the queue? Fill it right away.
-  if (autoQueueEnabled) maybeAutoQueue();
+  if (autoQueueEnabled) maybeAutoQueue(); // fill right away if we're near the end
 }
 
-// Fetch similar songs for a track and append them (skipping duplicates). Returns how many were added.
-async function loadRelatedTracks(videoId) {
-  if (loadingRelated || relatedFetched.has(videoId)) return false;
-  loadingRelated = true;
+// Fetch similar songs and append them (skipping duplicates). Resolves to how many were added.
+// If a fetch is already running, callers share it instead of starting a second one.
+function loadRelatedTracks(videoId) {
+  if (!videoId) return Promise.resolve(0);
+  if (relatedInFlight) return relatedInFlight;
+  if (relatedFetched.has(videoId)) return Promise.resolve(0);
 
-  try {
-    const res = await fetch(`/api/related/${encodeURIComponent(videoId)}`);
-    
-    if (!res.ok) {
-      throw new Error(`Server returned status ${res.status}`);
-    }
+  relatedInFlight = (async () => {
+    let added = 0;
+    try {
+      const res = await fetch(`/api/related/${encodeURIComponent(videoId)}`);
+      if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
+      const data = await res.json();
+      const tracks = Array.isArray(data) ? data : (data.tracks || []);
 
-    const data = await res.json();
-    let added = false;
-
-    if (data.tracks && data.tracks.length > 0) {
-      data.tracks.forEach(track => {
-        const isDuplicate = queue.some(item => item.id === track.id);
-        if (track.id && !isDuplicate) {
+      tracks.forEach(t => {
+        const track = { ...t, id: t.id || t.videoId };
+        if (track.id && !queue.some(q => q.id === track.id)) {
           remember(track);
           queue.push(track);
-          added = true;
+          added++;
         }
       });
+      relatedFetched.add(videoId); // only mark done on success, so failures can retry
       if (added) renderQueue();
+    } catch (err) {
+      console.error('Auto queue error:', err);
     }
-
-    relatedFetched.add(videoId);
     return added;
-  } catch (err) {
-    console.error('Auto queue error:', err);
-    return false;
-  } finally {
-    loadingRelated = false;
-  }
+  })().finally(() => { relatedInFlight = null; });
+
+  return relatedInFlight;
 }
 
-// If we're on one of the last 2 tracks, top up the queue
+// If we're on one of the last 2 tracks, top up the queue ahead of time
 function maybeAutoQueue() {
   if (!autoQueueEnabled || currentTrackIndex < 0) return;
   if (currentTrackIndex >= queue.length - 2) {
@@ -224,11 +241,16 @@ async function playNextTrack() {
     playTrackFromQueue(currentTrackIndex + 1);
     return;
   }
-  // End of queue: with Auto Queue on, fetch similar songs and keep going
+  // End of queue: wait for Auto Queue (including a fetch already in progress), then keep playing
   if (autoQueueEnabled && currentTrackIndex >= 0) {
-    const added = await loadRelatedTracks(queue[currentTrackIndex].id);
-    if (added && currentTrackIndex + 1 < queue.length) {
+    const current = queue[currentTrackIndex];
+    updateNowPlayingUI(current, 'Finding similar songs...');
+    await loadRelatedTracks(current.id);
+    if (queue[currentTrackIndex] !== current) return; // user changed track meanwhile
+    if (currentTrackIndex + 1 < queue.length) {
       playTrackFromQueue(currentTrackIndex + 1);
+    } else {
+      updateNowPlayingUI(current);
     }
   }
 }
@@ -239,7 +261,6 @@ function playPreviousTrack() {
 
 function removeFromQueue(index) {
   if (index === currentTrackIndex) {
-    // Removing the playing track: stop and move on to the next one
     queue.splice(index, 1);
     audioPlayer.pause();
     if (index < queue.length) {
@@ -297,6 +318,7 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
 document.getElementById('prevBtn').addEventListener('click', playPreviousTrack);
 document.getElementById('nextBtn').addEventListener('click', playNextTrack);
 document.getElementById('auto-queue-btn').addEventListener('click', toggleAutoQueue);
+document.getElementById('queue-collapse-btn').addEventListener('click', toggleQueueCollapse);
 audioPlayer.addEventListener('ended', playNextTrack);
 
 // One click handler for every button in the lists
@@ -318,4 +340,5 @@ document.addEventListener('click', e => {
 
 // --- Init ---
 syncAutoQueueUI();
+syncQueueCollapseUI();
 renderAll();

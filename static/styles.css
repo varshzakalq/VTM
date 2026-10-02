@@ -206,3 +206,19 @@ audio { flex: 1; min-width: 0; height: 40px; outline: none; color-scheme: dark; 
   .actions { width: 100%; justify-content: flex-end; }
   body { padding-bottom: 200px; }
 }
+
+/* ---------- Collapsible Up Next ---------- */
+.collapse-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: none; border: none; padding: 4px 6px; margin-left: -6px;
+  font-size: 18px; font-weight: 700;
+}
+.collapse-btn:hover { background: var(--surface-2); }
+.collapse-btn .chev { display: inline-block; font-size: 16px; color: var(--muted); transition: transform .2s; }
+.collapse-btn.collapsed .chev { transform: rotate(-90deg); }
+.collapse-btn .count {
+  font-size: 12px; font-weight: 600;
+  color: var(--muted); background: var(--surface-2);
+  border-radius: 999px; padding: 2px 8px;
+}
+.song-list.collapsed { display: none; }

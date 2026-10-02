@@ -27,7 +27,11 @@
     <div class="grid">
       <section>
         <div class="section-head">
-          <h2>Up Next</h2>
+          <button id="queue-collapse-btn" class="collapse-btn" aria-expanded="true" title="Collapse / expand">
+            <span class="chev">▾</span>
+            <span class="collapse-title">Up Next</span>
+            <span id="queue-count" class="count">0</span>
+          </button>
           <button id="auto-queue-btn" class="toggle active" aria-pressed="true" title="Automatically add similar songs when the queue runs low">
             <span class="switch"></span>
             <span class="toggle-label">Auto Queue: ON</span>

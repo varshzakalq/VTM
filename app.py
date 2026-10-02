@@ -1,19 +1,10 @@
-from ytmusicapi import YTMusic
-
 from flask import Flask
-ytmusic = YTMusic()
-
-
+from ytmusicapi import YTMusic
+from routes import register_routes
 
 
 def create_app():
-    app = Flask(__name__ , template_folder='templates')
-   
-
-
-    from routes import register_routes
-    register_routes(app,ytmusic)
-
+    app = Flask(__name__)       
+    ytmusic = YTMusic()
+    register_routes(app, ytmusic)
     return app
-
-
