@@ -30,11 +30,11 @@ def register_routes(app,ytmusic):
     def get_stream(video_id):
         ydl_opts = {
             'format': 'bestaudio/best',
-            'noplaylist': True,
             'quiet': True,
+            'noplaylist': True,
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['mweb', 'android'],
+                    'player_client': ['mweb', 'android', 'ios'],
                 }
             }
         }
