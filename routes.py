@@ -27,6 +27,7 @@ def register_routes(app,ytmusic):
         return jsonify(songs)
   
     @app.route('/api/stream/<video_id>', methods=['GET'])
+    @app.route('/api/stream/<video_id>', methods=['GET'])
     def get_stream(video_id):
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -34,21 +35,21 @@ def register_routes(app,ytmusic):
             'noplaylist': True,
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['mweb', 'android', 'ios'],
+                    'player_client': ['ios', 'tvhtml5'],  # Bypasses datacenter IP bans
                 }
             }
         }
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-
                 info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
-                
                 stream_url = info.get('url', '')
+                
                 if not stream_url:
-                    return jsonify({'error': 'No audio stream found for this video'}), 400
+                    return jsonify({'error': 'No audio stream URL returned'}), 400
                     
                 return jsonify({'stream_url': stream_url})
-                
+
         except Exception as e:
-            print(f"\n[STREAM ERROR] Failed to fetch stream for {video_id}: {e}\n")
+            # Print exact error to Render logs
+            print(f"[RENDER STREAM ERROR] {str(e)}", flush=True)
             return jsonify({'error': f"Failed to extract stream: {str(e)}"}), 500
