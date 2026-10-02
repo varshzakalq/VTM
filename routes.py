@@ -31,25 +31,44 @@ def register_routes(app,ytmusic):
     def get_stream(video_id):
         ydl_opts = {
             'format': 'bestaudio/best',
-            'quiet': True,
             'noplaylist': True,
+            'quiet': True,
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['ios', 'tvhtml5'],  # Bypasses datacenter IP bans
+                    'player_client': ['mweb', 'android'],
                 }
             }
         }
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+
                 info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
-                stream_url = info.get('url', '')
                 
+                stream_url = info.get('url', '')
                 if not stream_url:
-                    return jsonify({'error': 'No audio stream URL returned'}), 400
+                    return jsonify({'error': 'No audio stream found for this video'}), 400
                     
                 return jsonify({'stream_url': stream_url})
-
+                
         except Exception as e:
-            # Print exact error to Render logs
-            print(f"[RENDER STREAM ERROR] {str(e)}", flush=True)
-            return jsonify({'error': f"Failed to extract stream: {str(e)}"}), 500
+            print(f"\n[STREAM ERROR] Failed to fetch stream for {video_id}: {e}\n")
+            return jsonify({'error': f"Failed to extract stream: {str(e)}"}), 500\
+
+    @app.route('/api/related/', methods=['GET'])
+    def get_related_tracks(video_id):
+        try:
+            # Fetch related "Up Next" tracks from YouTube Music
+            watch_playlist = ytmusic.get_watch_playlist(videoId=video_id, limit=10)
+            
+            tracks = []
+            for track in watch_playlist.get('tracks', []):
+                tracks.append({
+                    'id': track.get('videoId'),
+                    'title': track.get('title'),
+                    'artist': track['artists'][0]['name'] if track.get('artists') else 'Unknown Artist',
+                    'thumbnail': track['thumbnail'][-1]['url'] if track.get('thumbnail') else ''
+                })
+                
+            return jsonify({'tracks': tracks})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
