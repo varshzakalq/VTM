@@ -30,8 +30,13 @@ def register_routes(app,ytmusic):
     def get_stream(video_id):
         ydl_opts = {
             'format': 'bestaudio/best',
-            'quiet': True,
             'noplaylist': True,
+            'quiet': True,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['mweb', 'android'],
+                }
+            }
         }
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
