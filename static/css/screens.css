@@ -1,0 +1,74 @@
+/* ---------- Home ---------- */
+.home-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 6px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand h1 { font-size: 22px; font-weight: 800; letter-spacing: 1px; }
+.logo { width: 34px; height: 34px; border-radius: 11px; background: var(--ink); color: #fff; display: grid; place-items: center; }
+.logo .ico { width: 14px; height: 14px; }
+.greeting { color: var(--muted); font-size: 14px; margin-top: 18px; }
+.hero-title { font-size: 32px; font-weight: 800; line-height: 1.15; letter-spacing: -.5px; margin-top: 4px; }
+
+/* Playlist tiles */
+.pl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 16px; }
+.pl-tile { display: block; text-align: left; width: 100%; }
+.pl-cover { position: relative; aspect-ratio: 1; border-radius: 24px; overflow: hidden; background: linear-gradient(145deg, #1b2a4a, var(--navy)); box-shadow: var(--shadow); display: grid; color: #fff; place-items: center; }
+.pl-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pl-cover.mosaic { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.pl-cover.single img { grid-column: 1 / -1; grid-row: 1 / -1; }
+.pl-cover .ico { width: 34px; height: 34px; opacity: .8; }
+.pl-tile.add .pl-cover { background: rgba(255, 255, 255, .65); border: 2px dashed #c4c9d6; box-shadow: none; color: var(--muted); }
+.pl-tile.add:hover .pl-cover { background: var(--surface); }
+.pl-tile.add .pl-cover .ico { width: 42px; height: 42px; opacity: 1; }
+.pl-name { font-weight: 700; font-size: 15px; margin-top: 10px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.pl-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.pl-tile:active .pl-cover { transform: scale(.98); }
+
+/* ---------- Screen headers (Saved songs / playlist detail) ---------- */
+.screen-head { display: flex; align-items: center; gap: 12px; padding: 18px 0 6px; }
+.screen-title { font-size: 26px; font-weight: 800; letter-spacing: -.3px; overflow-wrap: anywhere; }
+.screen-sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.icon-circle { width: 40px; height: 40px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; box-shadow: var(--shadow); flex-shrink: 0; }
+.head-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 8px; }
+
+/* ---------- Search ---------- */
+.search-head { position: sticky; top: 0; z-index: 10; margin: 0 -20px; padding: 14px 20px 10px; background: rgba(236, 238, 242, .88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.search-box { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 999px; padding: 4px 4px 4px 16px; box-shadow: var(--shadow); }
+.search-box .ico { color: var(--muted); }
+.search-btn { background: var(--ink); color: #fff; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 999px; }
+
+.builder-banner { margin-top: 10px; background: var(--ink); color: #fff; border-radius: 20px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.builder-banner[hidden] { display: none; }
+.bb-info { flex: 1; min-width: 140px; }
+.bb-label { display: block; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; opacity: .6; }
+.bb-name { font-weight: 700; font-size: 15px; overflow-wrap: anywhere; }
+.bb-count { font-size: 12px; opacity: .65; margin-left: 6px; font-weight: 500; }
+.bb-actions { display: flex; gap: 8px; }
+.bb-actions .pill { height: 36px; font-size: 13px; padding: 0 14px; background: rgba(255, 255, 255, .12); border-color: transparent; color: #fff; }
+.bb-actions .pill.primary { background: #fff; color: var(--ink); }
+
+/* ---------- Song rows ---------- */
+.song-list { display: flex; flex-direction: column; }
+.song-card { display: flex; align-items: center; gap: 8px; padding: 10px 8px; border-bottom: 1px solid var(--line); border-radius: 16px; transition: background .15s; }
+.song-card:hover { background: rgba(255, 255, 255, .6); }
+.song-card.playing { background: var(--surface); box-shadow: var(--shadow); border-color: transparent; }
+.song-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.song-card img, .mini-row img { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; background: var(--navy); flex-shrink: 0; }
+.song-info { flex: 1; min-width: 0; }
+.song-title { font-weight: 600; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.song-artist { color: var(--muted); font-size: 13px; margin-top: 3px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+
+.actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.actions button { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); transition: transform .1s; }
+.actions button .ico { width: 17px; height: 17px; }
+.actions button:active { transform: scale(.92); }
+.actions .like-btn.liked { color: var(--red); }
+.actions button.done { color: var(--green); border-color: var(--green); }
+.actions .act-add { background: var(--ink); color: #fff; border-color: var(--ink); }
+.actions .act-add.done { background: var(--green); border-color: var(--green); color: #fff; }
+
+@media (max-width: 380px) {
+  .app { padding: 0 14px; }
+  .search-head { margin: 0 -14px; padding-left: 14px; padding-right: 14px; }
+  .actions button { width: 32px; height: 32px; }
+  .song-main { gap: 10px; }
+  .hero-title { font-size: 28px; }
+}
