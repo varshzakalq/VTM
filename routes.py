@@ -1,6 +1,14 @@
-from flask import render_template, request, jsonify
-import yt_dlp
 
+import yt_dlp
+from flask import render_template, request, jsonify, session, redirect, url_for
+import yt_dlp
+from auth_db import register_user, authenticate_user
+
+import os
+import psycopg2
+from flask import Flask, request, jsonify, session, render_template, redirect, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
+from auth_db import register_user, authenticate_user, get_user_by_id
 
 def artists_text(item):
     names = [a['name'] for a in item.get('artists') or [] if a.get('name')]
@@ -12,11 +20,65 @@ def last_thumb(item):
     return thumbs[-1]['url'] if thumbs else ''
 
 
+# Connect using your Neon connection string
+DATABASE_URL = os.environ.get("postgresql://neondb_owner:npg_cSE57DNiqPvz@ep-odd-sun-b4yfpz1q-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
+
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL)
+
+# User Registration Endpoint
+
 def register_routes(app, ytmusic):
 
     @app.route('/')
     def index():
-        return render_template('index.html')
+        user_id = session.get('user_id')
+        # Serves login page as base render if unauthenticated
+        if not session.get('user_id'):
+            return render_template('login.html')
+        username = get_user_by_id(user_id) or session.get('username', '')
+        return render_template('index.html', username=username)
+
+    @app.route('/login')
+    def login():
+        if session.get('user_id'):
+            return redirect(url_for('index'))
+        return render_template('login.html')
+
+    @app.route('/api/login', methods=['POST'])
+    def api_login():
+        data = request.get_json() or {}
+        username = data.get('username', '').strip()
+        password = data.get('password', '')
+
+        user_id, error = authenticate_user(username, password)
+        if error:
+            return jsonify({'error': error}), 401
+
+        session.permanent = True  # Activates the persistent cookie
+        session['user_id'] = user_id
+        session['username'] = username
+        return jsonify({'success': True, 'username': username})
+
+    @app.route('/api/register', methods=['POST'])
+    def api_register():
+        data = request.get_json() or {}
+        username = data.get('username', '').strip()
+        password = data.get('password', '')
+
+        user_id, error = register_user(username, password)
+        if error:
+            return jsonify({'error': error}), 400
+
+        session.permanent = True
+        session['user_id'] = user_id
+        session['username'] = username
+        return jsonify({'success': True, 'username': username})
+
+    @app.route('/logout')
+    def logout():
+        session.clear()
+        return redirect(url_for('index'))
 
     @app.route('/api/search', methods=['GET'])
     def search():

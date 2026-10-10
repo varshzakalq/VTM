@@ -8,9 +8,13 @@ let searchToken = 0;
 
 function greeting() {
   const h = new Date().getHours();
-  return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-}
+  const timeSalutation = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  
+  const el = $('greeting');
+  const name = el && el.dataset ? el.dataset.username : '';
 
+  return name ? `${timeSalutation}, ${name}` : timeSalutation;
+}
 // ---------- Router ----------
 
 function showScreen(name, playlistId) {
