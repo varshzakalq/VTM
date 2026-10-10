@@ -21,7 +21,7 @@ def last_thumb(item):
 
 
 # Connect using your Neon connection string
-DATABASE_URL = os.environ.get("postgresql://neondb_owner:npg_cSE57DNiqPvz@ep-odd-sun-b4yfpz1q-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
+DATABASE_URL ="postgresql://neondb_owner:npg_cSE57DNiqPvz@ep-odd-sun-b4yfpz1q-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
@@ -48,25 +48,26 @@ def register_routes(app, ytmusic):
     @app.route('/api/login', methods=['POST'])
     def api_login():
         data = request.get_json() or {}
-        username = data.get('username', '').strip()
+        login_id = data.get('username', '').strip()  # can be username or email
         password = data.get('password', '')
 
-        user_id, error = authenticate_user(username, password)
+        user_id, actual_username, error = authenticate_user(login_id, password)
         if error:
             return jsonify({'error': error}), 401
 
-        session.permanent = True  # Activates the persistent cookie
+        session.permanent = True
         session['user_id'] = user_id
-        session['username'] = username
-        return jsonify({'success': True, 'username': username})
+        session['username'] = actual_username
+        return jsonify({'success': True, 'username': actual_username})
 
     @app.route('/api/register', methods=['POST'])
     def api_register():
         data = request.get_json() or {}
         username = data.get('username', '').strip()
+        email = data.get('email', '').strip()
         password = data.get('password', '')
 
-        user_id, error = register_user(username, password)
+        user_id, error = register_user(username, email, password)
         if error:
             return jsonify({'error': error}), 400
 
@@ -74,7 +75,6 @@ def register_routes(app, ytmusic):
         session['user_id'] = user_id
         session['username'] = username
         return jsonify({'success': True, 'username': username})
-
     @app.route('/logout')
     def logout():
         session.clear()

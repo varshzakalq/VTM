@@ -42,6 +42,7 @@
       color: var(--muted);
       border-radius: 999px;
       text-align: center;
+      cursor: pointer;
       transition: all .2s;
     }
     .auth-tab.active {
@@ -94,15 +95,11 @@
       justify-content: center;
       gap: 8px;
       margin-top: 20px;
+      cursor: pointer;
       transition: transform .15s, opacity .15s;
     }
-    .auth-btn:active {
-      transform: scale(.98);
-    }
-    .auth-btn:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
+    .auth-btn:active { transform: scale(.98); }
+    .auth-btn:disabled { opacity: .6; cursor: not-allowed; }
     .auth-alert {
       background: rgba(229, 72, 77, .12);
       color: var(--red);
@@ -113,14 +110,7 @@
       margin-bottom: 16px;
       display: none;
     }
-    .auth-alert.visible {
-      display: block;
-      animation: fadeIn .2s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
-      to { opacity: 1; transform: none; }
-    }
+    .auth-alert.visible { display: block; }
   </style>
 </head>
 <body>
@@ -129,32 +119,31 @@
   <!-- Brand Header -->
   <header class="home-head">
     <div class="brand">
-      <span class="logo">
-        <svg class="ico" viewBox="0 0 24 24"><polygon points="7,4 20,12 7,20" fill="currentColor"/></svg>
-      </span>
-      <h1>vtm</h1>
+      
+      <h1>jus.. a formality</h1>
     </div>
   </header>
 
   <p class="greeting" id="greetingText">Good evening</p>
   <h2 class="hero-title">Find your rhythm.</h2>
 
-  <!-- Login / Register Card -->
   <div class="auth-card">
+    <!-- Tab Switcher -->
     <div class="auth-tabs" role="tablist">
-      <button type="button" class="auth-tab active" id="tabLogin" onclick="switchMode('login')">Sign In</button>
-      <button type="button" class="auth-tab" id="tabRegister" onclick="switchMode('register')">Create Account</button>
+      <button type="button" class="auth-tab active" id="tabLogin" onclick="showForm('login')">Sign In</button>
+      <button type="button" class="auth-tab" id="tabRegister" onclick="showForm('register')">Create Account</button>
     </div>
 
     <div class="auth-alert" id="authAlert" role="alert"></div>
 
-    <form id="authForm" onsubmit="handleSubmit(event)">
+    <!-- 1. SIGN IN FORM (Username + Password only) -->
+    <form id="formLogin" onsubmit="handleLogin(event)">
       <div class="input-box">
         <svg class="ico" viewBox="0 0 24 24">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
         </svg>
-        <input type="text" id="username" name="username" placeholder="Username" required autocomplete="username" autofocus>
+        <input type="text" id="loginUsername" placeholder="Username or Email" required autofocus>
       </div>
 
       <div class="input-box">
@@ -162,19 +151,52 @@
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
-        <input type="password" id="password" name="password" placeholder="Password" required autocomplete="current-password">
+        <input type="password" id="loginPassword" placeholder="Password" required>
       </div>
 
-      <button type="submit" class="auth-btn" id="submitBtn">
-        <span id="btnText">Sign In</span>
+      <button type="submit" class="auth-btn" id="loginBtn">
+        <span>Sign In</span>
       </button>
     </form>
+
+    <!-- 2. REGISTER FORM (Username + Extra Email Field + Password) -->
+    <form id="formRegister" onsubmit="handleRegister(event)" style="display: none;">
+      <!-- Username -->
+      <div class="input-box">
+        <svg class="ico" viewBox="0 0 24 24">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <input type="text" id="regUsername" placeholder="Choose a Username" required>
+      </div>
+
+      <!-- Extra Field: Email -->
+      <div class="input-box">
+        <svg class="ico" viewBox="0 0 24 24">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+        <input type="email" id="regEmail" placeholder="Email Address" required>
+      </div>
+
+      <!-- Password -->
+      <div class="input-box">
+        <svg class="ico" viewBox="0 0 24 24">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <input type="password" id="regPassword" placeholder="Create a Password" required>
+      </div>
+
+      <button type="submit" class="auth-btn" id="regBtn">
+        <span>Create Account</span>
+      </button>
+    </form>
+
   </div>
 </div>
 
 <script>
-  let mode = 'login';
-
   (function setGreeting() {
     const hour = new Date().getHours();
     let text = 'Good evening';
@@ -184,74 +206,88 @@
     if (el) el.textContent = text;
   })();
 
-  function switchMode(newMode) {
-    mode = newMode;
-    const tabLogin = document.getElementById('tabLogin');
-    const tabRegister = document.getElementById('tabRegister');
-    const btnText = document.getElementById('btnText');
-    const authAlert = document.getElementById('authAlert');
-
-    authAlert.classList.remove('visible');
-    authAlert.textContent = '';
-
-    if (mode === 'login') {
-      tabLogin.classList.add('active');
-      tabRegister.classList.remove('active');
-      btnText.textContent = 'Sign In';
-      document.getElementById('password').autocomplete = 'current-password';
-    } else {
-      tabLogin.classList.remove('active');
-      tabRegister.classList.add('active');
-      btnText.textContent = 'Create Account';
-      document.getElementById('password').autocomplete = 'new-password';
-    }
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
+  function showForm(mode) {
     const alertBox = document.getElementById('authAlert');
-    const submitBtn = document.getElementById('submitBtn');
-    const btnText = document.getElementById('btnText');
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
-
     alertBox.classList.remove('visible');
     alertBox.textContent = '';
 
-    if (!username || !password) {
-      alertBox.textContent = 'Please fill in both fields.';
-      alertBox.classList.add('visible');
-      return;
+    if (mode === 'login') {
+      document.getElementById('tabLogin').classList.add('active');
+      document.getElementById('tabRegister').classList.remove('active');
+      document.getElementById('formLogin').style.display = 'block';
+      document.getElementById('formRegister').style.display = 'none';
+      document.getElementById('loginUsername').focus();
+    } else {
+      document.getElementById('tabRegister').classList.add('active');
+      document.getElementById('tabLogin').classList.remove('active');
+      document.getElementById('formLogin').style.display = 'none';
+      document.getElementById('formRegister').style.display = 'block';
+      document.getElementById('regUsername').focus();
     }
+  }
 
-    submitBtn.disabled = true;
-    const originalText = btnText.textContent;
-    btnText.textContent = 'Please wait...';
+  // Handle Login (Username + Password)
+  async function handleLogin(e) {
+    e.preventDefault();
+    const alertBox = document.getElementById('authAlert');
+    const btn = document.getElementById('loginBtn');
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
 
-    const endpoint = mode === 'login' ? '/api/login' : '/api/register';
+    alertBox.classList.remove('visible');
+    btn.disabled = true;
 
     try {
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-
       const data = await res.json();
-
       if (res.ok) {
-        // Successful login: Reload to '/' which now serves index.html
         window.location.href = '/';
       } else {
-        alertBox.textContent = data.error || 'Authentication failed.';
+        alertBox.textContent = data.error || 'Invalid credentials';
         alertBox.classList.add('visible');
       }
-    } catch (err) {
-      alertBox.textContent = 'Network or server error. Please try again.';
+    } catch {
+      alertBox.textContent = 'Server connection error.';
       alertBox.classList.add('visible');
     } finally {
-      submitBtn.disabled = false;
-      btnText.textContent = originalText;
+      btn.disabled = false;
+    }
+  }
+
+  // Handle Register (Username + Email + Password)
+  async function handleRegister(e) {
+    e.preventDefault();
+    const alertBox = document.getElementById('authAlert');
+    const btn = document.getElementById('regBtn');
+    const username = document.getElementById('regUsername').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+
+    alertBox.classList.remove('visible');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        window.location.href = '/';
+      } else {
+        alertBox.textContent = data.error || 'Registration failed';
+        alertBox.classList.add('visible');
+      }
+    } catch {
+      alertBox.textContent = 'Server connection error.';
+      alertBox.classList.add('visible');
+    } finally {
+      btn.disabled = false;
     }
   }
 </script>
